@@ -17,6 +17,7 @@ type Node struct {
 	Active     bool
 	Server     *http.Server
 	ReqCount   int64
+	LastStatus int64
 }
 
 func (n *Node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -33,6 +34,7 @@ func (n *Node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	defaultTtransport := &http.Transport{Proxy: nil}
 	client := http.Client{Transport: defaultTtransport}
 	res, err := client.Do(req)
+
 	if err != nil {
 		http.Error(w, http.StatusText(500), 500)
 		return
@@ -41,6 +43,8 @@ func (n *Node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for k, v := range res.Header {
 		w.Header().Set(k, v[0])
 	}
+
+	w.WriteHeader(res.StatusCode)
 
 	body, err := ioutil.ReadAll(res.Body)
 
