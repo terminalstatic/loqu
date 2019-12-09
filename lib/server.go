@@ -44,6 +44,7 @@ func (n *Node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set(k, v[0])
 	}
 
+	atomic.StoreInt64(&n.LastStatus, int64(res.StatusCode))
 	w.WriteHeader(res.StatusCode)
 
 	body, err := ioutil.ReadAll(res.Body)

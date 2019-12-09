@@ -282,6 +282,6 @@ func removeCmd(tokens []string) {
 
 func statusCmd() {
 	for k, v := range nms.NodeMap {
-		fmt.Printf(`%s => {Host: %s, DstUrl: "%s", HealthPath: "%s", Active: %t, Reqs: %d}`+"\n", k, v.Host, v.DestURL, v.HealthPath, v.Active, v.ReqCount)
+		fmt.Printf(`%s => {Host: %s, DstUrl: "%s", HealthPath: "%s", Active: %t, Reqs: %d, LastStatus: %d}`+"\n", k, v.Host, v.DestURL, v.HealthPath, v.Active, v.ReqCount, v.LastStatus)
 	}
 }
