@@ -2,7 +2,6 @@ package lib
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"sync"
@@ -11,6 +10,7 @@ import (
 )
 
 type Node struct {
+	sync.RWMutex
 	Host       string
 	DestURL    string
 	HealthPath string
@@ -19,16 +19,7 @@ type Node struct {
 	ReqCount   int64
 }
 
-var servMutex sync.Mutex
-
 func (n *Node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
-	servMutex.Lock()
-	if !n.Active {
-		http.Error(w, http.StatusText(500), 500)
-		return
-	}
-	servMutex.Unlock()
 
 	atomic.AddInt64(&n.ReqCount, 1)
 	defer atomic.AddInt64(&n.ReqCount, -1)
@@ -59,11 +50,11 @@ func (n *Node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (nh *Node) Serve() {
-	servMutex.Lock()
+	nh.Lock()
 	nh.Server = &http.Server{Addr: nh.Host, Handler: nh}
-	servMutex.Unlock()
+	nh.Unlock()
 	if err := nh.Server.ListenAndServe(); err != nil {
-		fmt.Printf("\n%s\n> ", err)
+		//fmt.Printf("\n%s\n> ", err)
 	}
 }
 
@@ -72,7 +63,7 @@ func (nh *Node) Shutdown() {
 	defer cancel()
 
 	if err := nh.Server.Shutdown(ctx); err != nil {
-		fmt.Println(err)
+		//fmt.Println(err)
 		nh.Server.Close()
 	}
 	nh.Server = nil
@@ -83,19 +74,28 @@ func (nh *Node) ShutdownAndServe(nn *Node) {
 	defer cancel()
 
 	if err := nh.Server.Shutdown(ctx); err != nil {
-		fmt.Println(err)
+		//fmt.Println(err)
 		nh.Server.Close()
+
 	}
-	nh.Server = nil
+	nn.Lock()
+	nn.Active = true
+	nn.Unlock()
+	nh.Lock()
+	nh.Active = false
+	nh.Unlock()
 	nn.Serve()
 }
 
 func (nh *Node) SwitchTo(nn *Node) {
-
-	servMutex.Lock()
+	nn.Lock()
+	nh.RLock()
 	nn.Server = nh.Server
 	nn.Server.Handler = nn
 	nn.Active = true
+	nn.Unlock()
+	nh.RUnlock()
+	nh.Lock()
 	nh.Active = false
-	servMutex.Unlock()
+	nh.Unlock()
 }
