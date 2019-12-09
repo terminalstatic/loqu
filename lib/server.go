@@ -59,7 +59,6 @@ func (nh *Node) Serve() {
 	nh.Server = &http.Server{Addr: nh.Host, Handler: nh}
 	nh.Unlock()
 	if err := nh.Server.ListenAndServe(); err != nil {
-		//fmt.Printf("\n%s\n> ", err)
 	}
 }
 
@@ -68,7 +67,6 @@ func (nh *Node) Shutdown() {
 	defer cancel()
 
 	if err := nh.Server.Shutdown(ctx); err != nil {
-		//fmt.Println(err)
 		nh.Server.Close()
 	}
 	nh.Server = nil
@@ -79,7 +77,6 @@ func (nh *Node) ShutdownAndServe(nn *Node) {
 	defer cancel()
 
 	if err := nh.Server.Shutdown(ctx); err != nil {
-		//fmt.Println(err)
 		nh.Server.Close()
 
 	}
