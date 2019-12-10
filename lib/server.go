@@ -27,6 +27,7 @@ func (n *Node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	req, err := http.NewRequest(r.Method, n.DestURL+r.URL.Path, nil)
 	if err != nil {
+		atomic.StoreInt64(&n.LastStatus, int64(500))
 		http.Error(w, http.StatusText(500), 500)
 		return
 	}
@@ -36,6 +37,7 @@ func (n *Node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	res, err := client.Do(req)
 
 	if err != nil {
+		atomic.StoreInt64(&n.LastStatus, int64(500))
 		http.Error(w, http.StatusText(500), 500)
 		return
 	}
